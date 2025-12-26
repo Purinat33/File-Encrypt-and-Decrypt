@@ -94,6 +94,7 @@ def encrypt():
             continue
         if file_to_read == row[-1]:
             print("File of that name already exists. Aborting ... ")
+            f.close()
             return
     f.close()
 
@@ -161,13 +162,15 @@ def decrypt():
             matched_row = row
 
     if matched_row == []:
+        f.close()
         return
     f.close()
 
     # 3. Unpack and fetch
 
     _, nn_raw, rr_raw, pp_raw, salt_b64, _, nonce_b64, ciphertext_enc_file_name, tag_b64, file_name = matched_row
-    ciphertext_base64 = open(ciphertext_enc_file_name, 'r').readline()
+    with open(ciphertext_enc_file_name, 'r') as f:
+        ciphertext_base64 = f.readline()
 
     nn = int(nn_raw)
     rr = int(rr_raw)
