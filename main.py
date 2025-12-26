@@ -47,11 +47,6 @@ def main_menu():
     return choice
 
 
-def encode_data(data):
-    """Convert file content to Bytes"""
-    pass
-
-
 def encrypt():
     """
     Encrypt the File:
@@ -70,6 +65,9 @@ def encrypt():
         print("File doesn't exist. Exiting...")
         return
 
+    with open(file_to_read, 'rb') as f:
+        file = f.read()
+
     # Do everything else
     password_str = (input("Input Password here: "))
     password = password_str.encode()
@@ -77,7 +75,11 @@ def encrypt():
     key = scrypt(password, salt, 16, N=2**4, r=8, p=1)
     cipher = AES.new(key, AES.MODE_GCM)
     nonce = cipher.nonce
-    ciphertext, tag = cipher.encrypt_and_digest()
+
+    ciphertext, tag = cipher.encrypt_and_digest(file)
+    # Storage
+    with open(FILE_NAME, 'a') as csv:
+        csv.write(f"scrypt,{salt},AES-GCM,{nonce},{ciphertext},{tag}")
 
 
 def decrypt():
