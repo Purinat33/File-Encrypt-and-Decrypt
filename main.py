@@ -38,7 +38,7 @@ def create_table():
     5. Salt
     6. AEAD Algorithm
     7. Nonce
-    8. Ciphertext
+    8. Ciphertext Path
     9. Tag (From the AES Crypto Library)
     10. Original File Name
     """
@@ -48,7 +48,7 @@ def create_table():
         return
 
     fields = ['kdf', 'n', 'r', 'p', 'salt',
-              'aead', 'nonce', 'ciphertext', 'tag', 'filename']
+              'aead', 'nonce', 'ciphertext_enc', 'tag', 'filename']
     with open(FILE_NAME, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(fields)
@@ -98,11 +98,20 @@ def encrypt():
     ciphertext_b64 = base64.b64encode(ciphertext)
     tag_b64 = base64.b64encode(tag)
 
+    # A better way to save space: Save ciphertext to a separate file and reference only the name
+    file_to_read_stripped = file_to_read.split('/')
+    raw_file_name = file_to_read_stripped[-1]
+    ciphertext_file_path = f"./encrypted/{raw_file_name}_encoded.enc"
+
+    with open(ciphertext_file_path, 'w+') as f:
+        f.write(ciphertext_b64.decode())
+
+    # Write to CSV
     with open(FILE_NAME, 'a') as f:
         csv_ = csv.writer(f)
         csv_.writerow(
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
-             ciphertext_b64.decode(), tag_b64.decode(), file_to_read]
+             ciphertext_file_path, tag_b64.decode(), file_to_read]
         )
 
 
