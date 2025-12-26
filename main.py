@@ -78,8 +78,10 @@ def encrypt():
 
     ciphertext, tag = cipher.encrypt_and_digest(file)
     # Storage
-    with open(FILE_NAME, 'a') as csv:
-        csv.write(f"scrypt,{salt},AES-GCM,{nonce},{ciphertext},{tag}")
+    with open(FILE_NAME, 'a') as f:
+        csv_ = csv.writer(f)
+        csv_.writerow(
+            f"scrypt,{salt.decode()},AES-GCM,{nonce.decode()},{ciphertext.decode()},{tag.decode()}")
 
 
 def decrypt():
