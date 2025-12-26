@@ -61,6 +61,7 @@ def main_menu():
     return choice
 
 
+# TODO: Might need a guard for file that already exists (at least with the same end name)
 def encrypt():
     """
     Encrypt the File:
@@ -78,6 +79,20 @@ def encrypt():
     if not os.path.exists(file_to_read):
         print("File doesn't exist. Exiting...")
         return
+
+    # A better way to save space: Save ciphertext to a separate file and reference only the name
+    file_to_read_stripped = file_to_read.split('/')
+    raw_file_name = file_to_read_stripped[-1]
+    ciphertext_file_path = f"./encrypted/{raw_file_name}_encrypted.enc"
+
+    # Check CSV for existing same filename
+    csv_file = csv.reader(open(FILE_NAME, 'r'), delimiter=',')
+    for row in csv_file:
+        if not row:
+            continue
+        if file_to_read == row[-1]:
+            print("File of that name already exists. Aborting ... ")
+            return
 
     with open(file_to_read, 'rb') as f:
         file = f.read()
@@ -97,11 +112,6 @@ def encrypt():
     nonce_b64 = base64.b64encode(nonce)
     ciphertext_b64 = base64.b64encode(ciphertext)
     tag_b64 = base64.b64encode(tag)
-
-    # A better way to save space: Save ciphertext to a separate file and reference only the name
-    file_to_read_stripped = file_to_read.split('/')
-    raw_file_name = file_to_read_stripped[-1]
-    ciphertext_file_path = f"./encrypted/{raw_file_name}_encrypted.enc"
 
     with open(ciphertext_file_path, 'w+') as f:
         f.write(ciphertext_b64.decode())
@@ -128,8 +138,52 @@ def decrypt():
     6. Read ciphertext from step 1)
     7. Attempt a decryption and verification using the nonce, and tag
     """
-    
-    pass
+
+    # 1.
+    file_to_read = input("File to decrypt (No path): ")
+    ciphertext_file_path = f"./encrypted/{file_to_read}_encrypted.enc"
+
+    if not os.path.exists(ciphertext_file_path):
+        print(f"Encrypted file for {file_to_read} not found. Exiting")
+        return
+
+    # 2. https://stackoverflow.com/questions/26082360/python-searching-csv-and-return-entire-row
+    csv_file = csv.reader(open(FILE_NAME, 'r'), delimiter=',')
+    matched_row = []
+    for row in csv_file:
+        if not row:
+            continue
+        if file_to_read == row[-1]:
+            matched_row = row
+            print(row)
+
+    # 3. Unpack and fetch
+
+    _, nn_raw, rr_raw, pp_raw, salt_b64, _, nonce_b64, ciphertext_enc_file_name, tag_b64, _ = matched_row
+    ciphertext_base64 = open(ciphertext_enc_file_name, 'r').readline()
+
+    nn = int(nn_raw)
+    rr = int(rr_raw)
+    pp = int(pp_raw)
+
+    salt = base64.b64decode(salt_b64.encode())
+    nonce = base64.b64decode(nonce_b64.encode())
+    tag = base64.b64decode(tag_b64.encode())
+    ciphertext = base64.b64decode(ciphertext_base64.encode())
+
+    password_raw = input("Input Decryption Password: ")
+    password = password_raw.encode()
+    salt = get_random_bytes(16)
+    key = scrypt(password, salt, 16, N=nn, r=rr, p=pp)
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+
+    # Decryption
+    plaintext = cipher.decrypt(ciphertext)
+    try:
+        cipher.verify(tag)
+        print("Data is Authentic")
+    except ValueError:
+        print("Key Error or Message is Corrupted")
 
 
 def execute_mode(choice):
