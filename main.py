@@ -87,13 +87,15 @@ def encrypt():
     ciphertext_file_path = f"./encrypted/{raw_file_name}_encrypted.enc"
 
     # Check CSV for existing same filename
-    csv_file = csv.reader(open(FILE_NAME, 'r'), delimiter=',')
+    f = open(FILE_NAME, 'r')
+    csv_file = csv.reader(f, delimiter=',')
     for row in csv_file:
         if not row:
             continue
         if file_to_read == row[-1]:
             print("File of that name already exists. Aborting ... ")
             return
+    f.close()
 
     with open(file_to_read, 'rb') as f:
         file = f.read()
@@ -149,7 +151,8 @@ def decrypt():
         return
 
     # 2. https://stackoverflow.com/questions/26082360/python-searching-csv-and-return-entire-row
-    csv_file = csv.reader(open(FILE_NAME, 'r'), delimiter=',')
+    f = open(FILE_NAME, 'r')
+    csv_file = csv.reader(f, delimiter=',')
     matched_row = []
     for row in csv_file:
         if not row:
@@ -159,6 +162,7 @@ def decrypt():
 
     if matched_row == []:
         return
+    f.close()
 
     # 3. Unpack and fetch
 
@@ -194,9 +198,10 @@ def decrypt():
         # Delete the corresponding row from the csv
         # Save every row except the matching row
         # The opposite of the previous loop
-        csv_file = csv.reader(open(f"{FILE_NAME}", 'r'), delimiter=',')
-        temp_csv_file = csv.writer(
-            open(f"{FILE_NAME}_temp.csv", 'w'), delimiter=',')
+        f = open(f"{FILE_NAME}", 'r')
+        f_temp = open(f"{FILE_NAME}_temp.csv", 'w')
+        csv_file = csv.reader(f, delimiter=',')
+        temp_csv_file = csv.writer(f_temp, delimiter=',')
 
         for row in csv_file:
             if not row:
@@ -204,6 +209,9 @@ def decrypt():
             if file_to_read == row[-1]:
                 continue
             temp_csv_file.writerow(row)
+
+        f.close()
+        f_temp.close()
 
         # Now delete the old one and make the temp one the new one
         os.remove(FILE_NAME)
