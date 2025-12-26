@@ -1,8 +1,6 @@
 import os
-import secrets
 import csv
 import base64
-import pandas as pd
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
