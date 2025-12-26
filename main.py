@@ -45,8 +45,25 @@ def main_menu():
     return choice
 
 
+def encrypt():
+    """Encrypt the file"""
+    pass
+
+
+def decrypt():
+    """Decrypt the File"""
+    pass
+
+
+def execute_mode(choice):
+    if choice == 1:
+        encrypt()
+    else:
+        decrypt()
+
+
 def main():
-    # Check if the authentication table
+    # Check if the authentication table exists
     create_table()
     while True:
         choice = main_menu()
@@ -58,6 +75,8 @@ def main():
     if choice == 3:
         print("Goodbye")
         return
+
+    execute_mode(choice)
 
 
 if __name__ == '__main__':
