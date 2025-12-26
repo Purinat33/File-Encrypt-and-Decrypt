@@ -216,3 +216,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 authenticate.csv
+decrypted/*
+encrypted/*
+!encrypted/.gitkeep
+!decrypted/.gitkeep
