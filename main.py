@@ -2,6 +2,7 @@ import os
 import secrets
 import csv
 import base64
+import pandas as pd
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
@@ -155,11 +156,13 @@ def decrypt():
             continue
         if file_to_read == row[-1]:
             matched_row = row
-            print(row)
+
+    if matched_row == []:
+        return
 
     # 3. Unpack and fetch
 
-    _, nn_raw, rr_raw, pp_raw, salt_b64, _, nonce_b64, ciphertext_enc_file_name, tag_b64, _ = matched_row
+    _, nn_raw, rr_raw, pp_raw, salt_b64, _, nonce_b64, ciphertext_enc_file_name, tag_b64, file_name = matched_row
     ciphertext_base64 = open(ciphertext_enc_file_name, 'r').readline()
 
     nn = int(nn_raw)
@@ -173,7 +176,6 @@ def decrypt():
 
     password_raw = input("Input Decryption Password: ")
     password = password_raw.encode()
-    salt = get_random_bytes(16)
     key = scrypt(password, salt, 16, N=nn, r=rr, p=pp)
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
 
@@ -182,6 +184,31 @@ def decrypt():
     try:
         cipher.verify(tag)
         print("Data is Authentic")
+        # Write plaintext
+        with open(f'./decrypted/{file_name}', 'wb') as f:
+            f.write(plaintext)
+
+        # Delete the encrypted file
+        os.remove(ciphertext_file_path)
+
+        # Delete the corresponding row from the csv
+        # Save every row except the matching row
+        # The opposite of the previous loop
+        csv_file = csv.reader(open(f"{FILE_NAME}", 'r'), delimiter=',')
+        temp_csv_file = csv.writer(
+            open(f"{FILE_NAME}_temp.csv", 'w'), delimiter=',')
+
+        for row in csv_file:
+            if not row:
+                continue
+            if file_to_read == row[-1]:
+                continue
+            temp_csv_file.writerow(row)
+
+        # Now delete the old one and make the temp one the new one
+        os.remove(FILE_NAME)
+        os.rename(f"{FILE_NAME}_temp.csv", FILE_NAME)
+
     except ValueError:
         print("Key Error or Message is Corrupted")
 
