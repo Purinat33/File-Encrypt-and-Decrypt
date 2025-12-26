@@ -101,7 +101,7 @@ def encrypt():
     # A better way to save space: Save ciphertext to a separate file and reference only the name
     file_to_read_stripped = file_to_read.split('/')
     raw_file_name = file_to_read_stripped[-1]
-    ciphertext_file_path = f"./encrypted/{raw_file_name}_encoded.enc"
+    ciphertext_file_path = f"./encrypted/{raw_file_name}_encrypted.enc"
 
     with open(ciphertext_file_path, 'w+') as f:
         f.write(ciphertext_b64.decode())
@@ -111,12 +111,24 @@ def encrypt():
         csv_ = csv.writer(f)
         csv_.writerow(
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
-             ciphertext_file_path, tag_b64.decode(), file_to_read]
+             ciphertext_file_path, tag_b64.decode(), raw_file_name]  # Keep only the name
         )
 
 
 def decrypt():
-    """Decrypt the File"""
+    """
+    Decrypt the File
+    1. User provide filename to decrypt with no path (e.g. 'hello.txt')
+        * We store the encrypted file in format: ./encrypted/{filename}_encrypted.enc
+        * So we retrieve it from: ./encrypted/hello.txt_encrypted.enc
+    2. Find file name in the csv via the provided filename file and get that line
+    3. Fetch N, r, p, salt
+    4. User provide the password
+    5. Reconstruct **key** with step 3) information
+    6. Read ciphertext from step 1)
+    7. Attempt a decryption and verification using the nonce, and tag
+    """
+    
     pass
 
 
