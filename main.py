@@ -16,7 +16,7 @@ File Encryptor/Decryptor by Purinat33
 
 # For storage
 KDF = "scrypt"
-N = 2**4
+N = 2**16
 r = 8
 p = 1
 
@@ -40,6 +40,7 @@ def create_table():
     7. Nonce
     8. Ciphertext
     9. Tag (From the AES Crypto Library)
+    10. Original File Name
     """
 
     # https://www.geeksforgeeks.org/python/working-csv-files-python/
@@ -47,7 +48,7 @@ def create_table():
         return
 
     fields = ['kdf', 'n', 'r', 'p', 'salt',
-              'aead', 'nonce', 'ciphertext', 'tag']
+              'aead', 'nonce', 'ciphertext', 'tag', 'filename']
     with open(FILE_NAME, 'w') as f:
         writer = csv.writer(f)
         writer.writerow(fields)
@@ -101,7 +102,7 @@ def encrypt():
         csv_ = csv.writer(f)
         csv_.writerow(
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
-             ciphertext_b64.decode(), tag_b64.decode()]
+             ciphertext_b64.decode(), tag_b64.decode(), file_to_read]
         )
 
 
