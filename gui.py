@@ -104,8 +104,6 @@ class PageOne(tk.Frame):
         self.encrypt_button.pack()
 
 # Decrypt File
-
-
 class PageTwo(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -117,3 +115,31 @@ class PageTwo(tk.Frame):
         button = tk.Button(self, text="Go to the start page",
                            command=lambda: controller.show_frame("StartPage"))
         button.pack()
+        self.file_button = tk.Button(
+            self, text="Select File for Decryption", command=self.select_file)
+        self.file_button.pack(expand=True)
+
+    def select_file(self):
+        file_types = (
+            ('Encrypted files', '*.enc'),
+            ("All Files", "*.*")
+        )
+        self.file = fd.askopenfilename(
+            title="Open a File",
+            initialdir='encrypted/',
+            filetypes=file_types
+        )
+
+        self.file_label = tk.Label(self, text=f"File Opened: {self.file}")
+        self.file_label.pack()
+
+        self.password_label = tk.Label(self, text=f"Input Password Here")
+        self.password_label.pack()
+
+        self.password_field = tk.Entry(self, show='*', width=64)
+        self.password_field.pack()
+
+        self.encrypt_button = tk.Button(
+            self, text="Decrypt", command=lambda: decrypt(self.file, self.password_field.get()))
+        self.encrypt_button.pack()
+        

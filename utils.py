@@ -44,20 +44,19 @@ def encrypt(file_path, pwd):
     encrypted_dir.mkdir(parents=True, exist_ok=True)
 
     raw_file_name = file_to_read.name  # just the basename, OS-safe
-    ciphertext_file_path = encrypted_dir / f"{raw_file_name}_encrypted.enc"
+    ciphertext_file_path = (
+        encrypted_dir / f"{raw_file_name}_encrypted.enc").resolve()
     # ciphertext_file_path is a Path object; use str(ciphertext_file_path) if needed
 
     # Check CSV for existing same filename
-    f = open(FILE_NAME, 'r', encoding='utf-8')
-    csv_file = csv.reader(f, delimiter=',')
-    for row in csv_file:
-        if not row:
-            continue
-        if file_to_read == row[-1]:
-            print("File of that name already exists. Aborting ... ")
-            f.close()
-            return
-    f.close()
+    with open(FILE_NAME, 'r', encoding='utf-8', newline='') as f:
+        csv_file = csv.reader(f, delimiter=',')
+        for row in csv_file:
+            if not row or row[0] == "kdf":
+                continue
+            if str(file_to_read.resolve()) == row[-1]:
+                print("File of that name already exists. Aborting ... ")
+                return
 
     with open(file_to_read, 'rb') as f:
         file = f.read()
@@ -79,7 +78,7 @@ def encrypt(file_path, pwd):
     ciphertext_b64 = base64.b64encode(ciphertext)
     tag_b64 = base64.b64encode(tag)
 
-    with open(ciphertext_file_path, 'w+') as f:
+    with open(ciphertext_file_path, 'w', encoding='utf-8') as f:
         f.write(ciphertext_b64.decode())
 
     # Write to CSV
@@ -87,11 +86,11 @@ def encrypt(file_path, pwd):
         csv_ = csv.writer(f)
         csv_.writerow(
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
-             ciphertext_file_path, tag_b64.decode(), file_path]
+             str(ciphertext_file_path), tag_b64.decode(), str(file_to_read.resolve())]
         )
 
 
-def decrypt():
+def decrypt(file_path, pwd):
     """
     Decrypt the File
     1. User provide filename to decrypt with no path (e.g. 'hello.txt')
@@ -106,33 +105,35 @@ def decrypt():
     """
 
     # 1.
-    file_to_read = input("File to decrypt (No path): ")
-    ciphertext_file_path = f"./encrypted/{file_to_read}_encrypted.enc"
+    ciphertext_file_path = Path(file_path)
 
-    if not os.path.exists(ciphertext_file_path):
-        print(f"Encrypted file for {file_to_read} not found. Exiting")
+    if not ciphertext_file_path.exists():
+        print(f"Encrypted file not found: {ciphertext_file_path}")
         return
 
     # 2. https://stackoverflow.com/questions/26082360/python-searching-csv-and-return-entire-row
-    f = open(FILE_NAME, 'r', encoding='utf-8')
-    csv_file = csv.reader(f, delimiter=',')
     matched_row = []
-    for row in csv_file:
-        if not row:
-            continue
-        if file_to_read == row[-1]:
-            matched_row = row
+    with open(FILE_NAME, 'r', encoding='utf-8', newline='') as f:
+        csv_file = csv.reader(f, delimiter=',')
+        for row in csv_file:
+            if not row or row[0] == "kdf":   # skip empty/header
+                continue
 
-    if matched_row == []:
-        f.close()
+            ciphertext_enc_in_csv = row[7]   # ciphertext_enc column
+            csv_enc_path = Path(ciphertext_enc_in_csv)
+
+            if (str(ciphertext_file_path.resolve()) == str(csv_enc_path.resolve())) or (ciphertext_file_path.name == csv_enc_path.name):
+                matched_row = row
+                break
+
+    if not matched_row:
+        print("No matching record found in authenticate.csv for that .enc file")
         return
-    f.close()
 
     # 3. Unpack and fetch
-
     _, nn_raw, rr_raw, pp_raw, salt_b64, _, nonce_b64, ciphertext_enc_file_name, tag_b64, file_name = matched_row
     with open(ciphertext_enc_file_name, 'r', encoding='utf-8') as f:
-        ciphertext_base64 = f.readline()
+        ciphertext_base64 = f.read().strip()
 
     nn = int(nn_raw)
     rr = int(rr_raw)
@@ -143,7 +144,7 @@ def decrypt():
     tag = base64.b64decode(tag_b64.encode())
     ciphertext = base64.b64decode(ciphertext_base64.encode())
 
-    password_raw = input("Input Decryption Password: ")
+    password_raw = pwd
     password = password_raw.encode()
     key = scrypt(password, salt, 16, N=nn, r=rr, p=pp)
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
@@ -154,33 +155,21 @@ def decrypt():
         cipher.verify(tag)
         print("Data is Authentic")
         # Write plaintext
-        with open(f'./decrypted/{file_name}', 'wb', encoding='utf-8') as f:
+
+        decrypted_dir = Path('decrypted')
+        decrypted_dir.mkdir(parents=True, exist_ok=True)
+        out_name = Path(file_name).name
+        out_path = decrypted_dir / out_name
+
+        with open(out_path, 'wb') as f:
             f.write(plaintext)
 
         # Delete the encrypted file
-        os.remove(ciphertext_file_path)
+        Path(ciphertext_enc_file_name).unlink(missing_ok=True)
 
         # Delete the corresponding row from the csv
         # Save every row except the matching row
         # The opposite of the previous loop
-        f = open(f"{FILE_NAME}", 'r', encoding='utf-8')
-        f_temp = open(f"{FILE_NAME}_temp.csv", 'w', encoding='utf-8')
-        csv_file = csv.reader(f, delimiter=',')
-        temp_csv_file = csv.writer(f_temp, delimiter=',')
-
-        for row in csv_file:
-            if not row:
-                continue
-            if file_to_read == row[-1]:
-                continue
-            temp_csv_file.writerow(row)
-
-        f.close()
-        f_temp.close()
-
-        # Now delete the old one and make the temp one the new one
-        os.remove(FILE_NAME)
-        os.rename(f"{FILE_NAME}_temp.csv", FILE_NAME)
 
     except ValueError:
         print("Key Error or Message is Corrupted")
