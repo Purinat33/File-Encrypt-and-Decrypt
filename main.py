@@ -37,7 +37,7 @@ def create_table():
 
     fields = ['kdf', 'n', 'r', 'p', 'salt',
               'aead', 'nonce', 'ciphertext_enc', 'tag', 'filename']
-    with open(FILE_NAME, 'w', newline='') as f:
+    with open(FILE_NAME, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(fields)
 

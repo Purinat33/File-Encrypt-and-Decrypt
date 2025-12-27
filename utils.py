@@ -1,6 +1,7 @@
 import os
 import base64
 import csv
+from pathlib import Path
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
@@ -32,20 +33,22 @@ def encrypt(file_path, pwd):
     7. Store each content in the CSV
     """
     # file_to_read = input("File Path: ")
-    file_to_read = file_path
+    file_to_read = Path(file_path)
 
-    if not os.path.exists(file_to_read):
+    if not file_to_read.exists():
         print("File doesn't exist. Exiting...")
         return
 
     # A better way to save space: Save ciphertext to a separate file and reference only the name
-    file_to_read_stripped = os.path.basename(file_to_read)
-    # raw_file_name = file_to_read_stripped[-1]
-    raw_file_name = file_to_read_stripped
-    ciphertext_file_path = f"./encrypted/{raw_file_name}_encrypted.enc"
+    encrypted_dir = Path("encrypted")
+    encrypted_dir.mkdir(parents=True, exist_ok=True)
+
+    raw_file_name = file_to_read.name  # just the basename, OS-safe
+    ciphertext_file_path = encrypted_dir / f"{raw_file_name}_encrypted.enc"
+    # ciphertext_file_path is a Path object; use str(ciphertext_file_path) if needed
 
     # Check CSV for existing same filename
-    f = open(FILE_NAME, 'r')
+    f = open(FILE_NAME, 'r', encoding='utf-8')
     csv_file = csv.reader(f, delimiter=',')
     for row in csv_file:
         if not row:
@@ -80,7 +83,7 @@ def encrypt(file_path, pwd):
         f.write(ciphertext_b64.decode())
 
     # Write to CSV
-    with open(FILE_NAME, 'a', newline='') as f:
+    with open(FILE_NAME, 'a', newline='', encoding='utf-8') as f:
         csv_ = csv.writer(f)
         csv_.writerow(
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
@@ -111,7 +114,7 @@ def decrypt():
         return
 
     # 2. https://stackoverflow.com/questions/26082360/python-searching-csv-and-return-entire-row
-    f = open(FILE_NAME, 'r')
+    f = open(FILE_NAME, 'r', encoding='utf-8')
     csv_file = csv.reader(f, delimiter=',')
     matched_row = []
     for row in csv_file:
@@ -128,7 +131,7 @@ def decrypt():
     # 3. Unpack and fetch
 
     _, nn_raw, rr_raw, pp_raw, salt_b64, _, nonce_b64, ciphertext_enc_file_name, tag_b64, file_name = matched_row
-    with open(ciphertext_enc_file_name, 'r') as f:
+    with open(ciphertext_enc_file_name, 'r', encoding='utf-8') as f:
         ciphertext_base64 = f.readline()
 
     nn = int(nn_raw)
@@ -151,7 +154,7 @@ def decrypt():
         cipher.verify(tag)
         print("Data is Authentic")
         # Write plaintext
-        with open(f'./decrypted/{file_name}', 'wb') as f:
+        with open(f'./decrypted/{file_name}', 'wb', encoding='utf-8') as f:
             f.write(plaintext)
 
         # Delete the encrypted file
@@ -160,8 +163,8 @@ def decrypt():
         # Delete the corresponding row from the csv
         # Save every row except the matching row
         # The opposite of the previous loop
-        f = open(f"{FILE_NAME}", 'r')
-        f_temp = open(f"{FILE_NAME}_temp.csv", 'w')
+        f = open(f"{FILE_NAME}", 'r', encoding='utf-8')
+        f_temp = open(f"{FILE_NAME}_temp.csv", 'w', encoding='utf-8')
         csv_file = csv.reader(f, delimiter=',')
         temp_csv_file = csv.writer(f_temp, delimiter=',')
 
