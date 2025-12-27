@@ -1,8 +1,7 @@
 import os
 import csv
 import base64
-from tkinter import *
-from tkinter import ttk
+from gui import App
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
@@ -243,11 +242,9 @@ def main():
     # if choice == 3:
     #     print("Goodbye")
     #     return
-    choice = 0
-    
-    
-    
-    execute_mode(choice)
+
+    app = App()
+    app.mainloop()
 
 
 if __name__ == '__main__':
