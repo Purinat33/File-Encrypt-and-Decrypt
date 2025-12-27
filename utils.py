@@ -17,7 +17,8 @@ p = 1
 
 AEAD = 'AES-GCM'
 
-def encrypt():
+
+def encrypt(file_path, pwd):
     """
     Encrypt the File:
 
@@ -30,14 +31,17 @@ def encrypt():
     6. Encrypt the _content_ of the file with the Cipher
     7. Store each content in the CSV
     """
-    file_to_read = input("File Path: ")
+    # file_to_read = input("File Path: ")
+    file_to_read = file_path
+
     if not os.path.exists(file_to_read):
         print("File doesn't exist. Exiting...")
         return
 
     # A better way to save space: Save ciphertext to a separate file and reference only the name
-    file_to_read_stripped = file_to_read.split('/')
-    raw_file_name = file_to_read_stripped[-1]
+    file_to_read_stripped = os.path.basename(file_to_read)
+    # raw_file_name = file_to_read_stripped[-1]
+    raw_file_name = file_to_read_stripped
     ciphertext_file_path = f"./encrypted/{raw_file_name}_encrypted.enc"
 
     # Check CSV for existing same filename
@@ -56,7 +60,8 @@ def encrypt():
         file = f.read()
 
     # Do everything else
-    password_str = (input("Input Password here: "))
+    # password_str = (input("Input Password here: "))
+    password_str = pwd
     password = password_str.encode()
     salt = get_random_bytes(16)
     key = scrypt(password, salt, 16, N=N, r=r, p=p)
@@ -79,7 +84,7 @@ def encrypt():
         csv_ = csv.writer(f)
         csv_.writerow(
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
-             ciphertext_file_path, tag_b64.decode(), raw_file_name]  # Keep only the name
+             ciphertext_file_path, tag_b64.decode(), file_path]
         )
 
 
