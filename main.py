@@ -1,6 +1,7 @@
 import os
 import csv
 import base64
+from tkinter import *
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
@@ -60,7 +61,6 @@ def main_menu():
     return choice
 
 
-# TODO: Might need a guard for file that already exists (at least with the same end name)
 def encrypt():
     """
     Encrypt the File:
@@ -232,17 +232,20 @@ def execute_mode(choice):
 def main():
     # Check if the authentication table exists
     create_table()
-    while True:
-        choice = main_menu()
-        if choice > 3:
-            print("Wrong Choice")
-        else:
-            break
+    # while True:
+    #     choice = main_menu()
+    #     if choice > 3:
+    #         print("Wrong Choice")
+    #     else:
+    #         break
 
-    if choice == 3:
-        print("Goodbye")
-        return
-
+    # if choice == 3:
+    #     print("Goodbye")
+    #     return
+    choice = 0
+    
+    
+    
     execute_mode(choice)
 
 
