@@ -2,7 +2,7 @@ import os
 import csv
 import base64
 from gui import App
-from utils import *
+from utils import FILE_NAME
 
 HEADER = """
 --------------- <> ---------------
@@ -49,26 +49,9 @@ def main_menu():
     return choice
 
 
-def execute_mode(choice):
-    if choice == 1:
-        encrypt()
-    else:
-        decrypt()
-
-
 def main():
     # Check if the authentication table exists
     create_table()
-    # while True:
-    #     choice = main_menu()
-    #     if choice > 3:
-    #         print("Wrong Choice")
-    #     else:
-    #         break
-
-    # if choice == 3:
-    #     print("Goodbye")
-    #     return
 
     app = App()
     app.mainloop()

@@ -5,6 +5,8 @@
 
 import tkinter as tk                # python 3
 from tkinter import font as tkfont  # python 3
+from utils import *
+
 
 class App(tk.Tk):
 
@@ -46,24 +48,25 @@ class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="This is the start page",
+        label = tk.Label(self, text="File Encrypt/Decrypt Tool by Purinat33",
                          font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
 
-        button1 = tk.Button(self, text="Go to Page One",
+        button1 = tk.Button(self, text="Encrypt File",
                             command=lambda: controller.show_frame("PageOne"))
-        button2 = tk.Button(self, text="Go to Page Two",
+        button2 = tk.Button(self, text="Decrypt File",
                             command=lambda: controller.show_frame("PageTwo"))
         button1.pack()
         button2.pack()
 
 
+# Encrypt File
 class PageOne(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="This is page 1",
+        label = tk.Label(self, text="Encrypt a File",
                          font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
         button = tk.Button(self, text="Go to the start page",
@@ -71,12 +74,13 @@ class PageOne(tk.Frame):
         button.pack()
 
 
+# Decrypt File
 class PageTwo(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="This is page 2",
+        label = tk.Label(self, text="Decrypt a File",
                          font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
         button = tk.Button(self, text="Go to the start page",
