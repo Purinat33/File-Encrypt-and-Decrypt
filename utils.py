@@ -88,6 +88,8 @@ def encrypt(file_path, pwd):
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
              str(ciphertext_file_path), tag_b64.decode(), str(file_to_read.resolve())]
         )
+        
+    return str(ciphertext_file_path)
 
 
 def decrypt(file_path, pwd):
@@ -153,23 +155,18 @@ def decrypt(file_path, pwd):
     plaintext = cipher.decrypt(ciphertext)
     try:
         cipher.verify(tag)
-        print("Data is Authentic")
-        # Write plaintext
-
-        decrypted_dir = Path('decrypted')
-        decrypted_dir.mkdir(parents=True, exist_ok=True)
-        out_name = Path(file_name).name
-        out_path = decrypted_dir / out_name
-
-        with open(out_path, 'wb') as f:
-            f.write(plaintext)
-
-        # Delete the encrypted file
-        Path(ciphertext_enc_file_name).unlink(missing_ok=True)
-
-        # Delete the corresponding row from the csv
-        # Save every row except the matching row
-        # The opposite of the previous loop
-
     except ValueError:
-        print("Key Error or Message is Corrupted")
+        raise ValueError("Key Error or Message is Corrupted")
+
+    # Write plaintext
+    decrypted_dir = Path('decrypted')
+    decrypted_dir.mkdir(parents=True, exist_ok=True)
+
+    out_name = Path(file_path).name
+    out_path = (decrypted_dir / out_name).resolve()
+
+    with open(out_path, 'wb') as f:
+        f.write(plaintext)
+
+    # Return output path so GUI can show it
+    return str(out_path)

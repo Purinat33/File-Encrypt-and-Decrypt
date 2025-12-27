@@ -6,6 +6,7 @@
 import tkinter as tk                # python 3
 from tkinter import font as tkfont  # python 3
 from tkinter import filedialog as fd
+from tkinter import messagebox
 from utils import *
 
 
@@ -65,7 +66,11 @@ class StartPage(tk.Frame):
 class PageOne(tk.Frame):
 
     def __init__(self, parent, controller):
+
         tk.Frame.__init__(self, parent)
+        self.status_var = tk.StringVar(value="")
+        self.status_label = tk.Label(self, textvariable=self.status_var)
+        self.status_label.pack(pady=8)
         self.controller = controller
         label = tk.Label(self, text="Encrypt a File",
                          font=controller.title_font)
@@ -78,6 +83,17 @@ class PageOne(tk.Frame):
         self.file_button = tk.Button(
             self, text="Select File for Encryption", command=self.select_file)
         self.file_button.pack(expand=True)
+
+    def run_encrypt(self):
+        try:
+            out_path = encrypt(self.file, self.password_field.get())
+            msg = f"Encryption success!\nEncrypted file:\n{out_path}"
+            self.status_var.set(msg)
+            messagebox.showinfo("Success", msg)
+        except Exception as e:
+            msg = f"Encryption failed:\n{e}"
+            self.status_var.set(msg)
+            messagebox.showerror("Error", msg)
 
     def select_file(self):
         file_types = (
@@ -100,8 +116,12 @@ class PageOne(tk.Frame):
         self.password_field.pack()
 
         self.encrypt_button = tk.Button(
-            self, text="Encrypt", command=lambda: encrypt(self.file, self.password_field.get()))
+            self,
+            text="Encrypt",
+            command=self.run_encrypt
+        )
         self.encrypt_button.pack()
+
 
 # Decrypt File
 class PageTwo(tk.Frame):
@@ -109,6 +129,10 @@ class PageTwo(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        self.status_var = tk.StringVar(value="")
+        self.status_label = tk.Label(self, textvariable=self.status_var)
+        self.status_label.pack(pady=8)
+
         label = tk.Label(self, text="Decrypt a File",
                          font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
@@ -118,6 +142,17 @@ class PageTwo(tk.Frame):
         self.file_button = tk.Button(
             self, text="Select File for Decryption", command=self.select_file)
         self.file_button.pack(expand=True)
+
+    def run_decrypt(self):
+        try:
+            out_path = decrypt(self.file, self.password_field.get())
+            msg = f"Data is Authentic\nDecrypted output:\n{out_path}"
+            self.status_var.set(msg)
+            messagebox.showinfo("Success", msg)
+        except Exception as e:
+            msg = f"Decryption failed:\n{e}"
+            self.status_var.set(msg)
+            messagebox.showerror("Error", msg)
 
     def select_file(self):
         file_types = (
@@ -140,6 +175,9 @@ class PageTwo(tk.Frame):
         self.password_field.pack()
 
         self.encrypt_button = tk.Button(
-            self, text="Decrypt", command=lambda: decrypt(self.file, self.password_field.get()))
+            self,
+            text="Decrypt",
+            command=self.run_decrypt
+        )
+
         self.encrypt_button.pack()
-        
