@@ -2,6 +2,7 @@ import os
 import csv
 import base64
 from tkinter import *
+from tkinter import ttk
 from Crypto.Protocol.KDF import scrypt
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
@@ -49,7 +50,7 @@ def create_table():
 
     fields = ['kdf', 'n', 'r', 'p', 'salt',
               'aead', 'nonce', 'ciphertext_enc', 'tag', 'filename']
-    with open(FILE_NAME, 'w') as f:
+    with open(FILE_NAME, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(fields)
 
@@ -119,7 +120,7 @@ def encrypt():
         f.write(ciphertext_b64.decode())
 
     # Write to CSV
-    with open(FILE_NAME, 'a') as f:
+    with open(FILE_NAME, 'a', newline='') as f:
         csv_ = csv.writer(f)
         csv_.writerow(
             [KDF, N, r, p, salt_b64.decode(), AEAD, nonce_b64.decode(),
